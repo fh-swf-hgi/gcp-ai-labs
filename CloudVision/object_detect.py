@@ -36,14 +36,14 @@ def highlight_objects(image, objs, output_filename):
     im = Image.open(image)
     w,h = im.size
     draw = ImageDraw.Draw(im)
-    # Sepecify the font-family and the font-size
     for obj in objs:
         box = [(vertex.x*w, vertex.y*h)
                for vertex in obj.bounding_poly.normalized_vertices]
         draw.line(box + [box[0]], width=5, fill='#00ff00')
         # Place the confidence value/score of the detected faces above the
         # detection box in the output image
-        font = ImageFont.truetype("Arial.ttf",18)
+        #font = ImageFont.truetype("Arial.ttf",18)
+        font = ImageFont.truetype("DejaVuSans.ttf",18)
         draw.text(((obj.bounding_poly.normalized_vertices)[0].x*w + 10,
                    (obj.bounding_poly.normalized_vertices)[0].y*h - 30),
                   str(format(obj.score, '.3f')) + '%',

@@ -35,7 +35,6 @@ def highlight_faces(image, faces, output_filename):
     """
     im = Image.open(image)
     draw = ImageDraw.Draw(im)
-    # Sepecify the font-family and the font-size
     for face in faces:
         box = [(vertex.x, vertex.y)
                for vertex in face.bounding_poly.vertices]
