@@ -54,8 +54,8 @@ def highlight_objects(image, objs, output_filename):
 def main(max_results):
     url = "https://images.pexels.com/photos/3932930/pexels-photo-3932930.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
 
-    input_filename = 'image.png'
-    output_filename = 'image_annotated.png'
+    input_filename = 'image.jpeg'
+    output_filename = 'image_annotated.jpeg'
     data = requests.get(url).content
     with open(input_filename,'wb') as f:
         f.write(data)
