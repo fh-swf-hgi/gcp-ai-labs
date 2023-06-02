@@ -1,0 +1,5 @@
+filetype
+google-cloud-vision
+google-cloud-translate==2.0.1
+Flask==2.0.2
+gunicorn==20.1.0
