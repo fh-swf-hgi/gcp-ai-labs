@@ -42,7 +42,8 @@ def highlight_faces(image, faces, output_filename):
         draw.line(box + [box[0]], width=5, fill='#00ff00')
         # Place the confidence value/score of the detected faces above the
         # detection box in the output image
-        font = ImageFont.truetype("Arial.ttf",56)
+        #font = ImageFont.truetype("Arial.ttf",56)
+        font = ImageFont.truetype("DejaVuSans.ttf",56)
         draw.text(((face.bounding_poly.vertices)[0].x + 10,
                    (face.bounding_poly.vertices)[0].y + 40),
                   str(format(face.detection_confidence, '.3f')) + '%',
