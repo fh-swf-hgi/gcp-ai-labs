@@ -51,7 +51,8 @@ def highlight_faces(image, faces, output_filename):
     im.save(output_filename)
 
 def main(max_results):
-    url = "https://images.pexels.com/photos/1037989/pexels-photo-1037989.jpeg"
+    #url = "https://images.pexels.com/photos/1037989/pexels-photo-1037989.jpeg"
+    url = "url = "https://images.pexels.com/photos/1037989/pexels-photo-1037989.jpeg?cs=srgb&fm=jpg&w=1280&h=853""
 
     input_filename = 'image.jpeg'
     output_filename = 'image_annotated.jpeg'
