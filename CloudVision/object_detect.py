@@ -52,7 +52,7 @@ def highlight_objects(image, objs, output_filename):
     im.save(output_filename)
 
 def main(max_results):
-    url = "https://images.pexels.com/photos/3932930/pexels-photo-3932930.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    url = "https://images.pexels.com/photos/265004/pexels-photo-265004.jpeg?cs=srgb&dl=pexels-pixabay-265004.jpg&fm=jpg&w=640&h=545"
 
     input_filename = 'image.jpeg'
     output_filename = 'image_annotated.jpeg'
