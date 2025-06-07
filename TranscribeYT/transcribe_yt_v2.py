@@ -2,6 +2,10 @@ import subprocess
 from moviepy.editor import *
 import os
 
+# pip uninstall moviepy
+# pip install moviepy==1.0.3
+# pip install yt-dlp
+
 def downloadYouTube(videourl, path):
     if not os.path.exists(path):
         os.makedirs(path)
