@@ -4,7 +4,42 @@ from urllib import request
 from urllib.request import Request, urlopen
 import requests
 
+DEFAULT_IMAGE_URL = "https://raw.githubusercontent.com/fhswf/datasets/main/images/room.jpg"
+
 client = vision.ImageAnnotatorClient()
+
+
+def _get_font(size=18):
+    """Return a usable font across platforms, with a safe fallback."""
+    font_candidates = [
+        "DejaVuSans.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/Library/Fonts/Arial.ttf",
+    ]
+
+    for font_path in font_candidates:
+        try:
+            return ImageFont.truetype(font_path, size)
+        except OSError:
+            continue
+
+    return ImageFont.load_default()
+
+
+def _normalize_github_image_url(url):
+    """Convert GitHub blob links to a direct raw file URL."""
+    if "github.com" in url and "/blob/" in url:
+        return url.replace("github.com/", "raw.githubusercontent.com/").replace("/blob/", "/")
+    return url
+
+
+def _download_image(url, output_filename, timeout=20):
+    """Download image data with URL normalization and HTTP checks."""
+    normalized_url = _normalize_github_image_url(url)
+    response = requests.get(normalized_url, timeout=timeout)
+    response.raise_for_status()
+    with open(output_filename, 'wb') as f:
+        f.write(response.content)
 
 def detect_objects(file, max_results=4):
     """Uses the Vision API to detect faces in the given file.
@@ -42,8 +77,7 @@ def highlight_objects(image, objs, output_filename):
         draw.line(box + [box[0]], width=5, fill='#00ff00')
         # Place the confidence value/score of the detected faces above the
         # detection box in the output image
-        #font = ImageFont.truetype("Arial.ttf",18)
-        font = ImageFont.truetype("DejaVuSans.ttf",18)
+        font = _get_font(size=18)
         draw.text(((obj.bounding_poly.normalized_vertices)[0].x*w + 10,
                    (obj.bounding_poly.normalized_vertices)[0].y*h - 30),
                   str(format(obj.score, '.3f')) + '%',
@@ -52,13 +86,14 @@ def highlight_objects(image, objs, output_filename):
     im.save(output_filename)
 
 def main(max_results):
-    url = "https://images.pexels.com/photos/265004/pexels-photo-265004.jpeg?cs=srgb&dl=pexels-pixabay-265004.jpg&fm=jpg&w=640&h=545"
+    # Accepts both GitHub blob and raw URLs.
+    # Example blob URL:
+    # https://github.com/fhswf/datasets/blob/main/images/room.jpg
+    url = DEFAULT_IMAGE_URL
 
     input_filename = 'image.jpeg'
     output_filename = 'image_annotated.jpeg'
-    data = requests.get(url).content
-    with open(input_filename,'wb') as f:
-        f.write(data)
+    _download_image(url, input_filename)
 
     with open(input_filename, 'rb') as image:
         objs = detect_objects(image, max_results)
