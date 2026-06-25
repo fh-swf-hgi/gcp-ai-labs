@@ -1,60 +1,30 @@
-import subprocess
-from moviepy.editor import *
-import os
+import sys
 
-# pip uninstall moviepy
-# pip install moviepy==1.0.3
-# pip install yt-dlp
+from google.cloud import speech
 
-def downloadYouTube(videourl, path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-    cmd = [
-        "yt-dlp",
-        "-f", "best[ext=mp4][vcodec!=none][acodec!=none]",
-        "-o", os.path.join(path, "%(title)s.%(ext)s"),
-        videourl
-    ]
-    subprocess.run(cmd, check=True)
 
-    # Suche erste MP4-Datei im Zielordner
-    for f in os.listdir(path):
-        if f.endswith(".mp4"):
-            return os.path.join(path, f)
-    raise FileNotFoundError("Keine MP4-Datei gefunden.")
-
-def mp4_to_wav(mp4file, wavfile, sfrom, sto):
-    if not os.path.isfile(wavfile):
-        videoclip = VideoFileClip(mp4file)
-        audioclip = videoclip.audio.subclip(sfrom, sto)
-        audioclip.write_audiofile(wavfile, codec='pcm_s16le', ffmpeg_params=["-ac", "1"])
-        audioclip.close()
-        videoclip.close()
-    else:
-        print("File already exists!")
-
-def transcribe_file(speech_file):
-    from google.cloud import speech
-
+def transcribe_gcs(gcs_uri):
     client = speech.SpeechClient()
 
-    with open(speech_file, "rb") as audio_file:
-        content = audio_file.read()
-
-    audio = speech.RecognitionAudio(content=content)
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        language_code="de-DE",
+    operation = client.long_running_recognize(
+        config=speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.MP3,
+            language_code="de-DE",
+            enable_automatic_punctuation=True,
+        ),
+        audio=speech.RecognitionAudio(uri=gcs_uri),
     )
 
-    response = client.recognize(config=config, audio=audio)
+    print("Waiting for Speech-to-Text operation to finish...")
+    response = operation.result(timeout=600)
 
     for result in response.results:
         print(f"Transcript: {result.alternatives[0].transcript}")
 
-# Hauptlogik
-url = "https://www.youtube.com/watch?v=3dWkS84uxPU"
-name = downloadYouTube(url, ".")
-audioname = os.path.splitext(name)[0] + ".wav"
-mp4_to_wav(name, audioname, 4, 49)
-transcribe_file(audioname)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2 or not sys.argv[1].startswith("gs://"):
+        print("Usage: python transcribe_yt_v2.py gs://BUCKET/Transrapid.mp3")
+        sys.exit(1)
+
+    transcribe_gcs(sys.argv[1])

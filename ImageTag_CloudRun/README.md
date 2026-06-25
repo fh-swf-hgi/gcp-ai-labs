@@ -1,3 +1,14 @@
-gcloud builds submit --region=europe-west1 --gcs-source-staging-dir=gs://image_build_storage/source --project cloud-computing-ss23 --tag eu.gcr.io/cloud-computing-ss23/hgi-imgtag
+# ImageTag Cloud Run
 
-gcloud run deploy hgi-imgtag-service --project cloud-computing-ss23 --image eu.gcr.io/cloud-computing-ss23/hgi-imgtag
+Build and deploy the service to Cloud Run with Artifact Registry:
+
+```bash
+gcloud config set project cloud-computing-ss26
+./build_and_deploy.sh
+```
+
+Optional environment variables:
+
+```bash
+PROJECT_ID=cloud-computing-ss26 REGION=europe-west3 REPOSITORY=cloud-run-images ./build_and_deploy.sh
+```

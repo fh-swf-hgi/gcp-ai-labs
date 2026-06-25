@@ -10,4 +10,4 @@ Cloud Run Projekt für eine Objekterkennung
 
 ## TranscribeYT
 
-Youtube Videos transkribieren
+Audiodateien mit Speech-to-Text transkribieren

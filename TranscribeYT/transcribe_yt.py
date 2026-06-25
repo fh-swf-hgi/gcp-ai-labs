@@ -1,59 +1,75 @@
-from pytube import YouTube
-from moviepy.editor import *
 import os
+import subprocess
+import urllib.request
+from pathlib import Path
 
-#source: https://pytube.io/en/latest/user/quickstart.html#downloading-a-video
-def downloadYouTube(videourl, path):
+from google.cloud import speech
 
-    yt = YouTube(videourl)
-    yt = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').first()
-    yt.default_filename
-    name = yt.default_filename.replace(" ","_")
-    if not os.path.exists(path):
-        os.makedirs(path)
-    if not os.path.isfile(os.path.join(path, name)):
-        yt.download(path, filename=name)
-    return os.path.join(path, name)
 
-#source https://www.askpython.com/python/examples/extract-audio-from-video
-def mp4_to_wav(mp4file,wavfile, sfrom, sto):
-    if not os.path.isfile(wavfile):
-        videoclip=VideoFileClip(mp4file)
-        audioclip=videoclip.audio
-        audioclip = audioclip.subclip(sfrom,sto)
-        audioclip.write_audiofile(wavfile, codec='pcm_s16le', ffmpeg_params=["-ac", "1"])
-        audioclip.close()
-        videoclip.close()
-    else:
-        print("File already exists!")
+DATASET_URL = (
+    "https://raw.githubusercontent.com/fhswf/datasets/main/audio/Transrapid.mp3"
+)
+audio_file = Path("audio/Transrapid.mp3")
+clip_file = Path("transrapid_clip.wav")
+clip_start = 4
+clip_end = 55
 
-#source: https://cloud.google.com/speech-to-text/docs/sync-recognize
+
+def ensure_audio_file(path):
+    if path.exists():
+        return
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    urllib.request.urlretrieve(DATASET_URL, path)
+
+
+def create_wav_clip(mp3_file, wav_file, start, end):
+    if wav_file.exists():
+        print(f"Using existing file: {wav_file}")
+        return
+
+    duration = end - start
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-ss",
+        str(start),
+        "-t",
+        str(duration),
+        "-i",
+        str(mp3_file),
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-sample_fmt",
+        "s16",
+        str(wav_file),
+    ]
+    subprocess.run(cmd, check=True)
+
+
 def transcribe_file(speech_file):
-    """Transcribe the given audio file."""
-    from google.cloud import speech
-
     client = speech.SpeechClient()
 
-    with open(speech_file, "rb") as audio_file:
-        content = audio_file.read()
+    with open(speech_file, "rb") as audio:
+        content = audio.read()
 
-    audio = speech.RecognitionAudio(content=content)
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        language_code="de-DE",
+    response = client.recognize(
+        config=speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=16000,
+            language_code="de-DE",
+        ),
+        audio=speech.RecognitionAudio(content=content),
     )
 
-    response = client.recognize(config=config, audio=audio)
-
-    # Each result is for a consecutive portion of the audio. Iterate through
-    # them to get the transcripts for the entire audio file.
     for result in response.results:
-        # The first alternative is the most likely one for this portion.
         print(f"Transcript: {result.alternatives[0].transcript}")
 
 
-url = "https://www.youtube.com/watch?v=3dWkS84uxPU"
-name = downloadYouTube(url, ".")
-audioname = os.path.splitext(name)[0] + ".wav"
-mp4_to_wav(name,audioname, 4, 49)
-transcribe_file(audioname)
+if __name__ == "__main__":
+    os.chdir(Path(__file__).parent)
+    ensure_audio_file(audio_file)
+    create_wav_clip(audio_file, clip_file, clip_start, clip_end)
+    transcribe_file(clip_file)
