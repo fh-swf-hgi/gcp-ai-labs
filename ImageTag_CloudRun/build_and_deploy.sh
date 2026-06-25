@@ -4,9 +4,16 @@ set -euo pipefail
 project_id="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}"
 region="${REGION:-europe-west3}"
 repository="${REPOSITORY:-cloud-run-images}"
-username=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | cut -d '@' -f1 | tr '.@' '--')
+# Holt den Account-String und schneidet bei Workforce-Pools den hinteren Teil (die User-ID) aus
+raw_account=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+if [[ "$raw_account" == *"workforcePools"* ]]; then
+    username=$(echo "$raw_account" | awk -F'/' '{print $NF}')
+else
+    username=$(echo "$raw_account" | cut -d '@' -f1 | tr '.@' '--')
+fi
 image="${region}-docker.pkg.dev/${project_id}/${repository}/${username}-imagetag"
 service="${username}-imagetag-service"
+bucket_name="${project_id}_cloudbuild"
 
 echo "Using project: ${project_id}"
 echo "Using username: ${username}"
@@ -34,7 +41,8 @@ tar cfz source.tgz Dockerfile main.py requirements.txt
 gcloud builds submit source.tgz \
     --region="$region" \
     --project "$project_id" \
-    --tag="$image"
+    --tag="$image"\
+    --gcs-source-staging-dir="gs://${bucket_name}/source/"
 rm source.tgz
 
 gcloud run deploy "$service" \
