@@ -8,6 +8,6 @@ Objekte und Gesichter auf Bildern erkennen
 
 Cloud Run Projekt für eine Objekterkennung
 
-## TranscribeYT
+## Transcribe
 
 Audiodateien mit Speech-to-Text transkribieren
